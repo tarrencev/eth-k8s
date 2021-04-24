@@ -1,0 +1,35 @@
+apiVersion: container.cnrm.cloud.google.com/v1beta1
+kind: ContainerNodePool
+metadata:
+  name: eth-nodepool
+spec:
+  location: us-central1-a
+  autoscaling:
+    minNodeCount: 1
+    maxNodeCount: 3
+  nodeConfig:
+    machineType: n1-standard-4
+    diskSizeGb: 64
+    diskType: pd-ssd
+    preemptible: false
+    oauthScopes:
+      - "https://www.googleapis.com/auth/logging.write"
+      - "https://www.googleapis.com/auth/monitoring"
+    labels:
+      cluster/node-type: eth
+    metadata:
+      disable-legacy-endpoints: "true"
+  management:
+    autoRepair: true
+    autoUpgrade: true
+  clusterRef:
+    name: prod
+---
+apiVersion: container.cnrm.cloud.google.com/v1beta1
+kind: ContainerCluster
+metadata:
+  annotations:
+    cnrm.cloud.google.com/remove-default-node-pool: "true"
+  name: prod
+spec:
+  location: us-central1-a

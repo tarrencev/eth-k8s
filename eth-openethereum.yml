@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openethereum-deployment
+  labels:
+    app: openethereum
+spec:
+  selector:
+    matchLabels:
+      app: openethereum
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: openethereum
+    spec:
+      securityContext:
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: openethereum
+          image: openethereum/openethereum:latest
+          volumeMounts:
+            - name: eth-chain-data
+              mountPath: /openethereum
+          ports:
+            - containerPort: 30303
+              protocol: UDP
+            - containerPort: 30303
+              protocol: TCP
+            - containerPort: 8545
+              protocol: TCP
+            - containerPort: 8546
+              protocol: TCP
+          args:
+            - --unsafe-expose
+            - --db-compaction
+            - ssd
+            - --base-path
+            - /openethereum
+          resources:
+            requests:
+              cpu: "2"
+      nodeSelector:
+        cluster/node-type: eth
+      volumes:
+        - name: eth-chain-data
+          persistentVolumeClaim:
+            claimName: eth-chain-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openethereum-service
+spec:
+  selector:
+    app: openethereum
+  ports:
+    - protocol: TCP
+      name: eth-tcp
+      port: 30303
+      targetPort: 30303
+    - protocol: UDP
+      name: eth-udp
+      port: 30303
+      targetPort: 30303
+    - protocol: TCP
+      name: rpc
+      port: 8545
+      targetPort: 8545
+    - protocol: TCP
+      name: websocket
+      port: 8546
+      targetPort: 8546
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: eth-chain-data
+spec:
+  storageClassName: faster
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Gi

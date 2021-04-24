@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prysmbeacon-deployment
+  labels:
+    app: prysmbeacon
+spec:
+  selector:
+    matchLabels:
+      app: prysmbeacon
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: prysmbeacon
+    spec:
+      containers:
+      - name: prysmbeacon
+        image: gcr.io/prysmaticlabs/prysm/beacon-chain:stable
+        volumeMounts:
+        - name: eth2-chain-data
+          mountPath: /prysm/beacon
+        ports:
+        - containerPort: 12000
+          protocol: UDP
+        - containerPort: 13000
+          protocol: TCP
+        - containerPort: 4000
+          protocol: TCP
+        args:
+        - --accept-terms-of-use
+        - --datadir=/prysm/beacon
+        - --rpc-host=0.0.0.0
+        - --monitoring-host=0.0.0.0
+        - --http-web3provider=http://openethereum-service:8545
+        - --force-clear-db
+        resources:
+            requests:
+              cpu: "1"
+      volumes:
+        - name: eth2-chain-data
+          persistentVolumeClaim:
+            claimName: eth2-chain-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prysmbeacon-service
+spec:
+  selector:
+     app: prysmbeacon
+  ports:
+    - protocol: TCP
+      name: beacon-tcp
+      port: 4000
+      targetPort: 4000
+    - protocol: TCP
+      name: beacon2-tcp
+      port: 13000
+      targetPort: 13000
+    - protocol: TCP
+      name: beacon-udp
+      port: 12000
+      targetPort: 12000
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: eth2-chain-data
+spec:
+  storageClassName: faster
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Gi
