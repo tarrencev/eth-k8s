@@ -1,6 +1,6 @@
 # eth-k8s
 
-Kubernetes manifests for deploying and syncing an eth1 (openetehreum) and eth2 (prysm) node to Google Kubernetes Engine. The full sync can be done in ~2days within the $300 of GCP credits (aka for free).
+Kubernetes manifests for deploying and syncing an eth1 (openethereum) and eth2 (prysm) node to Google Kubernetes Engine. The full sync can be done in ~2days within the $300 of GCP credits (aka for free).
 
 ## Quickstart
 
